@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>d3-图</title>
+    <script crossorigin="anonymous"
+      integrity="sha512-cd6CHE+XWDQ33ElJqsi0MdNte3S+bQY819f7p3NUHgwQQLXSKjE4cPZTeGNI+vaxZynk1wVU3hoHmow3m089wA=="
+      src="https://lib.baomitu.com/d3/6.7.0/d3.min.js"></script>
+    <style>
+      .d3 {
+        height: 500px;
+        width: 500px;
+        border: 1px solid red;
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg class="d3"></svg>
+    <script>
+      setTimeout(() => {
+        // location.reload()
+      }, 1000);
+      const width = 500
+      const height = 500
+      const padding = 50
+      const innerWidth = width - 2 * padding
+      const innerHeight = height - 2 * padding
+      let scaleX = null
+      let scaleY = null
+      let root = {}
+
+      const svg = d3
+        .select('.d3')
+        .append('g')
+        .attr('fill', 'none')
+        .attr('width', innerWidth)
+        .attr('height', innerHeight)
+        .attr('transform', 'translate(' + padding + ',' + padding + ')')
+
+      d3.json('./games.json').then(data => {
+        root = d3.hierarchy(data)
+        // tree处理树形数据
+        rootData = d3.tree().size([innerHeight, innerWidth]) (root)
+        console.log(rootData);
+        renderTree(rootData)
+      })
+      function renderTree(data) {
+        svg
+          .selectAll('path')
+          .data(data.links())
+          .join('path')
+          .attr('stroke', 'black')
+          // 绘制树形path
+          .attr('d', d3.linkHorizontal().x(i => i.y).y(i => i.x))
+
+        console.log(data.descendants());
+        svg
+          .selectAll('circle')
+          // 广度优先处理后的数据
+          .data(data.descendants())
+          .join('circle')
+          .attr('cx', d => d.y)
+          .attr('cy', d => d.x)
+          .attr('fill', 'red')
+          .attr('r', 3)
+
+        svg
+          .selectAll('text')
+          .data(data.descendants())
+          .join('text')
+          .text(d => d.data.name)
+          .attr('x', d => d.y)
+          .attr('y', d => d.x)
+          .attr('fill', 'green')
+          .attr('font-size', '7px')
+      }
+
+    </script>
+  </body>
+
+</html>

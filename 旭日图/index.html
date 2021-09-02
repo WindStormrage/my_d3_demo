@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>d3-图</title>
+    <script crossorigin="anonymous"
+      integrity="sha512-cd6CHE+XWDQ33ElJqsi0MdNte3S+bQY819f7p3NUHgwQQLXSKjE4cPZTeGNI+vaxZynk1wVU3hoHmow3m089wA=="
+      src="https://lib.baomitu.com/d3/6.7.0/d3.min.js"></script>
+    <style>
+      .d3 {
+        height: 500px;
+        width: 500px;
+        border: 1px solid red;
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg class="d3"></svg>
+    <script>
+      setTimeout(() => {
+        // location.reload()
+      }, 1000);
+      const width = 500
+      const height = 500
+      const padding = 50
+      const innerWidth = width - 2 * padding
+      const innerHeight = height - 2 * padding
+      let scaleX = null
+      let scaleY = null
+      let root = {}
+      const color = d3
+        .scaleOrdinal()
+        .range(d3.schemeSet3)
+
+      const svg = d3
+        .select('.d3')
+        .append('g')
+        .attr('fill', 'none')
+        .attr('width', innerWidth)
+        .attr('height', innerHeight)
+        .attr('transform', 'translate(' + padding + ',' + padding + ')')
+
+      d3.json('./games.json').then(data => {
+        // 与矩形不同的是,相当于矩形变成了一个环, 所以一个边是2PI, 另一个边是最长的半径
+        rootFn = d3.partition().size([2 * Math.PI, innerHeight / 2])
+        root = rootFn(
+          d3.hierarchy(data).sum(d => d.popularity)
+          .sort((a, b) => b.popularity - a.popularity)
+        )
+        render(root)
+      })
+      function render(data) {
+        const arc = d3.arc()
+          .innerRadius(d => d.y0)
+          .outerRadius(d => d.y1)
+          .startAngle(d => d.x0)
+          .endAngle(d => d.x1)
+
+        svg.selectAll('path').data(data.descendants()).join('path')
+          .attr('fill', d => color(d.data.name))
+          .attr('d', arc)
+          .attr('transform', 'translate(' + innerWidth / 2 + ',' + innerHeight / 2 + ')')
+        svg.selectAll('text').data(data.descendants()).join('text')
+          .attr('fill', '#fff')
+          .attr('transform', d => {
+            const x = (d.x0 + d.x1) / 2 * 180 / Math.PI
+            const y = (d.y0 + d.y1) / 2
+            return `translate(${innerWidth / 2}, ${innerHeight / 2}) rotate(${x - 90}) translate(${y}, ${0})`
+          })
+          .attr('text-anchor', 'middle')
+          .text(d => d.data.name)
+          .attr('font-size', '6')
+      }
+
+    </script>
+  </body>
+
+</html>

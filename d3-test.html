@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script crossorigin="anonymous"
+      integrity="sha512-cd6CHE+XWDQ33ElJqsi0MdNte3S+bQY819f7p3NUHgwQQLXSKjE4cPZTeGNI+vaxZynk1wVU3hoHmow3m089wA=="
+      src="https://lib.baomitu.com/d3/6.7.0/d3.min.js"></script>
+    <title>Document</title>
+    <style>
+      svg {
+        height: 500px;
+        width: 500px;
+        border: 1px solid red;
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg></svg>
+  </body>
+  <script>
+    const data1 = [{
+      key: 'a',
+      value: 111
+    },{
+      key: 'b',
+      value: 222
+    },{
+      key: 'c',
+      value: 333
+    }]
+    const data2 = [{
+      key: 'b',
+      value: 1111111
+    },{
+      key: 'f',
+      value: 2222222
+    },{
+      key: 'a',
+      value: 333333
+    }]
+    d3.select('svg').append('g').attr('class', 'g1')
+    d3.select('svg').append('g').attr('class', 'g2')
+    console.log(d3.selectAll('g').data(data1, i => i?.key).join('g'))
+    console.log(d3.selectAll('g').data(data2, i => i?.key).join('g'))
+    const a = d3.selectAll('g')
+    console.log(a);
+  </script>
+</html>

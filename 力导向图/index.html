@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>d3-图</title>
+    <!-- <script crossorigin="anonymous"
+      integrity="sha512-cd6CHE+XWDQ33ElJqsi0MdNte3S+bQY819f7p3NUHgwQQLXSKjE4cPZTeGNI+vaxZynk1wVU3hoHmow3m089wA=="
+      src="https://lib.baomitu.com/d3/6.7.0/d3.min.js"></script> -->
+      <script crossorigin="anonymous" integrity="sha512-HgRzpU8/m8pq4B+VDFo478ZO1Z4CvTuUmo3yTrB9pK1LNfVFEZDTOrtDbiT0WcrhCqxCcMDAfgIKqpzU8VSy/g==" src="https://lib.baomitu.com/d3/7.0.0/d3.js"></script>
+    <style>
+      .d3 {
+        height: 500px;
+        width: 500px;
+        border: 1px solid red;
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg class="d3"></svg>
+    <script>
+      setTimeout(() => {
+        // location.reload()
+      }, 1000);
+      const width = 500
+      const height = 500
+      const padding = 50
+      const innerWidth = width - 2 * padding
+      const innerHeight = height - 2 * padding
+      let links = null
+      let nodes = null
+      let lines = null
+      let circles = null
+      let root = {}
+      const color = d3
+        .scaleOrdinal()
+        .range(d3.schemeSet3)
+
+      const svg = d3
+        .select('.d3')
+        .append('g')
+        .attr('fill', 'none')
+        .attr('width', innerWidth)
+        .attr('height', innerHeight)
+        .attr('transform', 'translate(' + padding + ',' + padding + ')')
+
+      d3.json('./socfb-Caltech36.json').then(data => {
+        console.log(data);
+        links = data.links
+        nodes = []
+        for (let i = 0; i < data['#nodes']; i++) {
+          nodes.push({index: i})
+        }
+        init()
+
+        simulation = d3.forceSimulation(nodes)
+          // 添加万有斥力, strength为力的大小
+          .force('manybody', d3.forceManyBody().strength(-30))
+          // 中心位置
+          .force('center', d3.forceCenter(width / 2, height / 2))
+          // 相连的距离为distance
+          .force('link', d3.forceLink(links).strength(0.1).distance(10))
+          // 每次更新触发
+          .on('tick', () => {
+            lines
+              .attr('x1', d => d.source.x)
+              .attr('y1', d => d.source.y)
+              .attr('x2', d => d.target.x)
+              .attr('y2', d => d.target.y)
+            circles
+              .attr('cx', d => d.x)
+              .attr('cy', d => d.y)
+          })
+      })
+      function init() {
+        lines = svg.selectAll('line').data(links).join('line')
+          .attr('stroke', () => d3.interpolateRainbow(Math.random()))
+          .attr('stroke-width', .5)
+
+        circles = svg.selectAll('circle').data(nodes).join('circle')
+          .attr('r', 5)
+          .attr('fill', () => d3.interpolateRainbow(Math.random()))
+      }
+
+    </script>
+  </body>
+
+</html>

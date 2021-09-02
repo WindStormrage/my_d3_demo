@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>d3-path</title>
+    <script crossorigin="anonymous" src="https://lib.baomitu.com/d3/5.16.0/d3.min.js"></script>
+    <script crossorigin="anonymous" integrity="sha384-9dCJK6nh7skY14HrcvlLYlFga9/MehJjL9ONWRflmiXNRuf8p2jiF4Y5PR881PTq"
+      src="https://lib.baomitu.com/topojson/3.0.2/topojson.min.js"></script>
+    <script crossorigin="anonymous" integrity="sha384-0Tx7/EsjMZCWlUBFG/SPdufqdaKC9f9ko9bknnz3NdWyE2E6pPX5WxZbwKX6+bAZ"
+      src="https://lib.baomitu.com/d3-tip/0.9.1/d3-tip.min.js"></script>
+<script data-consolejs-channel="a172b4d2-8c31-246a-5515-1d9e51bf6f34" src="https://remotejs.com/agent/agent.js"></script>
+      
+    <style>
+      .d3 {
+        height: 500px;
+        width: 1000px;
+        border: 1px solid red;
+      }
+      .d3-tip {
+        background: #fff;
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg class="d3"></svg>
+    <script>
+      setTimeout(() => {
+        // location.reload()
+      }, 1000);
+      const width = 1000
+      const height = 500
+      const padding = 50
+      const innerWidth = width - 2 * padding
+      const innerHeight = height - 2 * padding
+      const Ykey = '现有确诊'
+      const Xkey = '日期'
+      let scaleX = null
+      let scaleY = null
+
+      const svg = d3
+        .select('.d3')
+        .append('g')
+        // .attr('fill', 'none')
+        .attr('width', innerWidth)
+        .attr('height', innerHeight)
+        .attr('transform', 'translate(' + padding + ',' + padding + ')')
+
+      // 投影选择
+      const projection = d3.geoNaturalEarth1()
+      // 绘制路径
+      const geo = d3.geoPath().projection(projection)
+      // tooltip 外部的tip库
+      const tip = d3
+        .tip()
+        .attr('class', 'd3-tip')
+        .html(d => d.properties.name)
+
+      svg.call(tip)
+
+      d3.json('./countries-110m.json').then(data => {
+        // topojson 2 geoJson
+        const world = topojson.feature(data, data.objects.countries)
+        console.log(world);
+        // 设置地图映射大小
+        projection.fitSize([innerWidth, innerHeight], world)
+        svg
+          .selectAll('path')
+          .data(world.features)
+          .join('path')
+          .attr('d', geo)
+          .attr('stroke', 'green')
+          .on('mouseover', function (d) {
+            this.style.fill = 'red'
+          })
+          .on('mouseleave', function (d) {
+            this.style.fill = 'black'
+          })
+          .on('click', function (d) {
+            console.log(d);
+            tip.show(d, this)
+          })
+      })
+    </script>
+  </body>
+
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script crossorigin="anonymous"
+      integrity="sha512-cd6CHE+XWDQ33ElJqsi0MdNte3S+bQY819f7p3NUHgwQQLXSKjE4cPZTeGNI+vaxZynk1wVU3hoHmow3m089wA=="
+      src="https://lib.baomitu.com/d3/6.7.0/d3.min.js"></script>
+    <title>Document</title>
+    <style>
+      .svg {
+        border: 1px solid red;
+        float: right;
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg height="500" width="500" class="svg"></svg>
+    <script>
+      const svg = d3.select('.svg');
+      const group = svg.append('g');
+      const circle = group
+        .append('circle')
+        .attr('stroke', 'red')
+        .attr('r', '100')
+        .attr('fill', 'green');
+      const scale = d3.scaleLinear().domain([0, 10]).range([-300, 300]);
+
+      // 柱图
+      const width = svg.attr('width');
+      const height = svg.attr('height');
+      const margin = [100, 50, 50, 100];
+      const innerWidth = width - margin[1] - margin[3];
+      const innerHeight = height - margin[0] - margin[2];
+      const data = [
+        {
+          name: '🇨🇳',
+          value: 123,
+        },
+        {
+          name: '🇺🇸',
+          value: 23,
+        },
+        {
+          name: '🇬🇧',
+          value: 15,
+        },
+        {
+          name: '🇫🇷',
+          value: 47,
+        },
+        {
+          name: '🇷🇺',
+          value: 86,
+        },
+      ];
+
+      const data2 = [
+        {
+          key: '🇺🇸',
+          val: 23,
+        },
+        {
+          key: '🇨🇳',
+          val: 123,
+        },
+        {
+          key: '🇫🇷',
+          val: 47,
+        },
+        {
+          key: '🇬🇧',
+          val: 15,
+        },
+        {
+          key: '🇷🇺',
+          val: 86,
+        }
+      ];
+
+      // 创建比例尺, 返回的是一个方法, 方法传入值返回地图中的位置, (比例尺是不是在做缩放的时候非常有用?)
+      const scaleX = d3
+        .scaleLinear()
+        // .domain([0, Math.max(...data[1]) * 1.2])
+        .domain([0, d3.max(data, (i) => i.value) * 1.2])
+        .range([0, innerWidth]);
+      const scaleY = d3
+        .scaleBand()
+        .domain(data.map((i) => i.name))
+        .range([0, innerWidth])
+        // 给y添加间距, 在求y宽度的时候减去间距
+        .padding(0.5);
+
+      // 柱图的组
+      const bar = d3
+        .select('svg')
+        .append('g')
+        .attr('id', 'bar')
+        .attr('transform', `translate(${margin[3]}, ${margin[0]})`);
+
+      // 通过比例尺创建坐标轴, left只是表示文字的位置
+      const yAxis = d3.axisLeft(scaleY).tickSize(-innerWidth);
+      const xAxis = d3.axisBottom(scaleX).tickSize(-innerHeight);
+
+      // 加入坐标轴,call?
+      bar.append('g').call(yAxis);
+      bar
+        .append('g')
+        .call(xAxis)
+        .attr('transform', `translate(0, ${innerHeight})`);
+
+      bar
+        .append('text')
+        .text('D3-Demo-bar')
+        .attr('font-size', '30')
+        .attr('transform', `translate(${innerHeight / 2}, -10)`)
+        // SVG特有属性, 文本位置, start|middle|end
+        .attr('text-anchor', 'middle');
+
+      d3.selectAll('.tick > text').attr('font-size', 20);
+
+      // // 循环渲染数据
+      // data.forEach((item) => {
+      // 	bar
+      // 		.append('rect')
+      // 		.attr('height', scaleY.bandwidth())
+      // 		.attr('opacity', '.8')
+      // 		.attr('y', scaleY(item.name));
+      // 	// .attr('width', scaleX(item.value))
+      // 	// .attr('fill', 'red')
+      // });
+
+      // // 通过data设置数据
+
+      // setTimeout(() => {
+      // 	d3.selectAll('rect')
+      // 		// 默认会按照index来设置值
+      // 		.data(data.reverse())
+      // 		.attr('width', (item) => scaleX(item.value) / 2)
+      // 		.attr('fill', 'green');
+      // }, 1000);
+
+      // setTimeout(() => {
+      // 	d3.selectAll('rect')
+      // 		// data的第二个参数相当于设置一个key去绑定对应的值, 默认不设置key就会按照index来设置值
+      // 		// 这里的key是跟谁去绑定??
+      //     // 调用data的时候已经绑定好数据了, 
+      //     // data提供一个被绑定的key, 然后进行匹配的是后面width的key去与data的key绑定
+      //     // 一般是在dom上用id或者data来标识唯一,然后再这里通过this可以拿到dom
+      // 		.data(data2, function (item, index) {
+      // 			// 最开始会处理一遍会发现data不存在,然后才会加载到data
+      // 			// https://github.com/d3/d3-selection
+      // 			// This example key function uses the datum d if present, and otherwise falls back to the element’s id property. Since these elements were not previously bound to data, the datum d is null when the key function is evaluated on selected elements, and non-null when the key function is evaluated on the new data.
+      // 			console.log('data', item);
+      // 			return index;
+      // 		})
+      // 		.attr('width', (item) => {
+      // 			return scaleX(item.val);
+      // 		})
+      // 		.attr('fill', 'yellow');
+      // }, 2000);
+
+      // 通过enter()去添加数据
+
+      // 到这里已经创建了data个空的图元
+      // bar.append('rect').attr('class', 'xxxx');
+      // console.log(bar.selectAll('.xxxx').data(data2).enter());
+
+      // 如果之前会有,enter就会返回所有data个但是之前有的是empty代替, 所以设置data不会包含之前的
+      bar.append('rect').attr('class', 'nullRect');
+      // 无中生有
+      bar
+        .selectAll('.nullRect')
+        // 数据驱动,数据多少个新的空指针, 什么样的数据绑定什么样的key
+        .data(data2)
+        .enter()
+        .append('rect')
+        .attr('class', 'nullRect')
+        .attr('id', i => i.key)
+        .attr('height', scaleY.bandwidth)
+        // 因为是通过scaleY来设置y,然后标尺是按照data来创建的所以展示顺序会按照data的name来
+        .attr('y', (i) => scaleY(i.key))
+        .attr('fill', 'blue')
+        // 开启动画, 下面设置的属性就会执行动画
+        .transition()
+        .duration(1000)
+        .attr('fill', 'pink').attr('opacity', .8)
+        .attr('width', (i) => scaleX(i.val))
+
+
+      setTimeout(() => {
+        console.log(bar
+          .selectAll('.nullRect')
+          // 为什么会执行两次?
+          .data(data)
+          .transition()
+          .duration(1000)
+          .attr('height', scaleY.bandwidth)
+          .attr('y', (i) => scaleY(i.name))
+          .attr('width', (i) => scaleX(i.value))
+          .attr('fill', 'yellow').attr('opacity', .3)
+        )
+      }, 1500);
+
+			// 难道d3就只是简简单单的svg的dom操作吗?
+			// 坐标轴的概念感觉就是专为可视化图表而生成的(看看g2的坐标轴)
+			// 数值写死的,resize重绘性能问题?
+			// 封装了svg操作的一个库?
+			// 还有一些数学函数,d3.max
+      // joindata  在添加元素和数据绑定的的时候起作用
+    </script>
+  </body>
+
+</html>

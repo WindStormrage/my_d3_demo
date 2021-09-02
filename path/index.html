@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>d3-path</title>
+    <script crossorigin="anonymous"
+      integrity="sha512-cd6CHE+XWDQ33ElJqsi0MdNte3S+bQY819f7p3NUHgwQQLXSKjE4cPZTeGNI+vaxZynk1wVU3hoHmow3m089wA=="
+      src="https://lib.baomitu.com/d3/6.7.0/d3.min.js"></script>
+    <style>
+      .d3 {
+        height: 500px;
+        width: 500px;
+        border: 1px solid red;
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg class="d3"></svg>
+    <script>
+      setTimeout(() => {
+        // location.reload()
+      }, 1000);
+      const width = 500
+      const height = 500
+      const padding = 50
+      const innerWidth = width - 2 * padding
+      const innerHeight = height - 2 * padding
+      const Ykey = '现有确诊'
+      const Xkey = '日期'
+      let scaleX = null
+      let scaleY = null
+
+      const svg = d3
+        .select('.d3')
+        .append('g')
+        .attr('fill', 'none')
+        .attr('width', innerWidth)
+        .attr('height', innerHeight)
+        .attr('transform', 'translate(' + padding + ',' + padding + ')')
+
+      const drawScale = (data) => {
+        scaleX = d3
+          .scaleTime()
+          .domain(d3.extent(data, d => d[Xkey]))
+          .range([0, innerWidth])
+        scaleY = d3
+          .scaleLinear()
+          .domain(d3.extent(data, d => d[Ykey]))
+          .range([innerHeight, 0])
+
+        const xAxis = d3
+          .axisBottom(scaleX)
+          .tickSize(5)
+          .tickFormat(d3.timeFormat('%d'))
+        const yAxis = d3
+          .axisLeft(scaleY)
+          .tickSize(5)
+
+        svg.append('g')
+          .call(xAxis)
+          .attr('transform', 'translate(' + 0 + ',' + innerHeight + ')')
+        svg.append('g')
+          .call(yAxis)
+      }
+
+      function drawLine(data) {
+        const line = d3
+          .line()
+          .x(d => scaleX(d[Xkey]))
+          .y(d => scaleY(d[Ykey]))
+          .curve(d3.curveCardinal.tension(0.5))
+        // .curve(d3.curveBasis)
+
+        svg
+          .append('path').datum(data)
+          .attr('class', 'line')
+          .attr('stroke', 'green')
+          .attr('stroke-width', 3)
+          .attr('d', line)
+      }
+
+      d3.csv('./province.csv').then(data => {
+        data = data.filter(i => i['省份'] !== '总计')
+        data = data.filter(i => i['省份'] !== '湖北')
+        const provinces = {}
+        data.forEach(d => {
+          d[Ykey] = +d[Ykey]
+          d[Xkey] = new Date(d[Xkey])
+          if (!provinces[d['省份']]) {
+            provinces[d['省份']] = []
+          }
+          provinces[d['省份']].push(d)
+        });
+        drawScale(data)
+
+        let list = Object.keys(provinces)
+        let i = -1
+        raf()
+        function raf() {
+          i++
+          if (i % 60) {
+            requestAnimationFrame(raf)
+            return
+          }
+          const index = Math.ceil(i / 60)
+          const key = list[index]
+          drawLine(provinces[key])
+          requestAnimationFrame(raf)
+        }
+
+      })
+    </script>
+  </body>
+
+</html>

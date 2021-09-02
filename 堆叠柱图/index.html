@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>d3-path</title>
+    <script crossorigin="anonymous"
+      integrity="sha512-cd6CHE+XWDQ33ElJqsi0MdNte3S+bQY819f7p3NUHgwQQLXSKjE4cPZTeGNI+vaxZynk1wVU3hoHmow3m089wA=="
+      src="https://lib.baomitu.com/d3/6.7.0/d3.min.js"></script>
+    <style>
+      .d3 {
+        height: 500px;
+        width: 500px;
+        border: 1px solid red;
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg class="d3"></svg>
+    <script>
+      setTimeout(() => {
+        // location.reload()
+      }, 1000);
+      const width = 500
+      const height = 500
+      const padding = 50
+      const innerWidth = width - 2 * padding
+      const innerHeight = height - 2 * padding
+      let scaleX = null
+      let scaleY = null
+
+      const data = [
+        {date: new Date(2015, 0, 1), apple: 600, bananas: 1000, lemon: 869},
+        {date: new Date(2016, 0, 1), apple: 234, bananas: 324, lemon: 523},
+        {date: new Date(2017, 0, 1), apple: 435, bananas: 564, lemon: 432},
+        {date: new Date(2018, 0, 1), apple: 768, bananas: 435, lemon: 234},
+      ]
+
+      const keys = Object.keys(data[0])
+      keys.shift()
+
+      // 离散的映射
+      const color = d3
+        .scaleOrdinal()
+        .domain(keys)
+        .range(d3.schemeSet3)
+
+      const svg = d3
+        .select('.d3')
+        .append('g')
+        .attr('fill', 'none')
+        .attr('width', innerWidth)
+        .attr('height', innerHeight)
+        .attr('transform', 'translate(' + padding + ',' + padding + ')')
+
+      // 这里只是帮助处理数据
+      const naiveStack = d3
+        .stack()
+        .keys(keys)
+        .order(d3.stackOrderNone)(data)
+
+      console.log(naiveStack);
+      drawScale(naiveStack)
+      drawBar(naiveStack)
+
+      function drawScale (data) {
+        console.log(data[0].map(i => i.data.date));
+        scaleX = d3
+          .scaleBand()
+          .domain(data[0].map(i => i.data.date))
+          .range([0, innerWidth])
+          .padding(0.5)
+        scaleY = d3
+          .scaleLinear()
+          .domain([0, d3.max(data, d => d3.max(d, i => i[1]))])
+          .range([innerHeight, 0])
+          .nice()
+
+        const xAxis = d3
+          .axisBottom(scaleX)
+          .tickSize(5)
+          .tickFormat(d3.timeFormat('%Y'))
+        const yAxis = d3
+          .axisLeft(scaleY)
+          .tickSize(5)
+
+        svg.append('g')
+          .call(xAxis)
+          .attr('transform', 'translate(' + 0 + ',' + innerHeight + ')')
+        svg.append('g')
+          .call(yAxis)
+      }
+
+      function drawBar(data) {
+        const bar = svg.append('g').attr('class', 'bar')
+        // 每一个系列一个g
+        const barGroup = bar
+          .selectAll('g')
+          .data(data)
+          .join('g')
+          .attr('class', i => `group ${i.key}`)
+          .attr('fill', i => color(i.key))
+        // 每个系列在每一个x的时候创建一个rect
+        barGroup
+          .selectAll('rect')
+          .data(i => {
+            console.log(i);
+            return i
+          })
+          .join('rect')
+          .attr('x', i => scaleX(i.data.date))
+          .attr('y', i => scaleY(i[1]))
+          .attr('height', i => scaleY(i[0]) - scaleY(i[1]))
+          .attr('width', scaleX.bandwidth())
+
+      }
+
+
+    </script>
+  </body>
+
+</html>

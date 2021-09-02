@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://lib.baomitu.com/d3/6.7.0/d3.min.js"></script>
+    <title>d3</title>
+    <style>
+      .svg {
+        border: 1px solid red;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- 创建svg容器 -->
+    <svg height="500" width="500" class="svg"></svg>
+    <script>
+      (async () => {
+        // 基本容器框架定义
+        const width = 500
+        const height = 500
+        const padding = 50
+        const innerWidth = width - padding * 2
+        const innerHeight = height - padding * 2
+        const xName = '国家'
+        const yName = '🏅'
+
+        // 数据引入
+        let data = await d3.csv('./data.csv')
+        let data_0 = await d3.csv('./data_0.csv')
+        // console.log(data);
+
+        // 创建比例尺
+        const scaleX = d3.scaleBand()
+          .domain(data.map(i => i[xName]))
+          .range([0, innerWidth])
+          // x不需要撑满
+          .padding(0.5)
+        const scaleY = d3.scaleLinear()
+          .domain([0, d3.max(data, i => i[yName])])
+          .range([0, innerWidth])
+          // 会发现y轴反过来了
+          .range([innerWidth, 0])
+          .nice()
+
+        // 定义坐标轴
+        const xAxis = d3.axisBottom(scaleX)
+        const yAxis = d3.axisLeft(scaleY)
+        // console.log(xAxis);
+
+        // 添加柱图容器, 用来放置坐标轴和后面的图形,
+        const bar = d3.select('svg')
+          .append('g')
+          .attr('id', 'bar')
+          .attr('transform', `translate(${padding}, ${padding})`);
+
+        // 把坐标轴添加到元素上, g元素用来分组管理
+        bar.append('g')
+          .call(xAxis)
+          // x轴需要偏移
+          .attr('transform', `translate(0, ${innerHeight})`)
+        bar.append('g')
+          .call(yAxis)
+        // 不使用call的方法
+        // yAxis(bar.append('g'))
+
+        // 绘制图表
+        // console.log(d3.select('g'))
+
+        const barGroup = bar.append('g')
+        // 循环实现
+        // data.forEach((item) => {
+        //   barGroup
+        //     .append('rect')
+        //     .attr('width', scaleX.bandwidth)
+        //     .attr('height', innerHeight - scaleY(item[yName]))
+        //     .attr('x', scaleX(item[xName]))
+        //     .attr('y', scaleY(item[yName]))
+        //     .attr('fill', 'pink')
+        // });
+
+        // data绑定实现
+        // data.forEach((item) => {
+        //   barGroup.append('rect')
+        // })
+        // const allRect = barGroup
+        //   .selectAll('rect')
+        //   .data(data)
+        //   .attr('width', scaleX.bandwidth)
+        //   .attr('height', d => innerHeight - scaleY(d[yName]))
+        //   .attr('x', d => scaleX(d[xName]))
+        //   .attr('y', d => scaleY(d[yName]))
+        //   .attr('fill', 'pink')
+        // 可以看到数据绑定的位置, __data__
+        // console.log(allRect)
+
+
+        // datajoin方式
+        function update() {
+          barGroup
+            .selectAll('rect')
+            .data(data, (d, i) => {
+              console.log(d);
+              return d[xName]
+              return d['序号']
+            })
+            .join('rect')
+            .on('mouseenter', function() {
+              this.style.fill = 'yellow'
+            })
+            .on('mouseleave', function() {
+              this.style.fill = 'yellowgreen'
+            })
+            .transition()
+            .duration(2000)
+            .attr('width', scaleX.bandwidth)
+            .attr('height', d => innerHeight - scaleY(d[yName]))
+            .attr('x', d => scaleX(d[xName]))
+            .attr('y', d => scaleY(d[yName]))
+            .attr('fill', 'pink')
+
+        }
+        update()
+        setTimeout(() => {
+          data = data_0
+          update()
+        }, 3000);
+
+      })()
+    </script>
+  </body>
+
+</html>

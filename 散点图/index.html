@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>散点图</title>
+    <script crossorigin="anonymous"
+      integrity="sha512-cd6CHE+XWDQ33ElJqsi0MdNte3S+bQY819f7p3NUHgwQQLXSKjE4cPZTeGNI+vaxZynk1wVU3hoHmow3m089wA=="
+      src="https://lib.baomitu.com/d3/6.7.0/d3.min.js"></script>
+    <style>
+      .svg {
+        /* padding: 50px; */
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg class="svg" height="500" width="500" class="svg"></svg>
+    <script>
+      setInterval(() => {
+        // location.reload();
+      }, 1000);
+      const svg = d3.select('.svg');
+      const size = 400;
+      const padding = 50;
+      svg
+        .append('rect')
+        .attr('stroke', 'red')
+        .attr('fill', 'transparent')
+        .attr('height', 500)
+        .attr('width', 500);
+
+      const san = svg
+        .append('g')
+        .attr('id', 'san')
+        .attr('transform', 'translate(' + padding + ', ' + padding + ')');
+
+      const data = [];
+      d3.csv('./hubeinxt.csv', (d) => {
+        let index = data.map(i => i.date).indexOf(d['日期']);
+        if (index === -1) {
+          data.push({
+            date: d['日期'],
+            info: [],
+          });
+          index = data.length - 1;
+        }
+        data[index].info.push({
+          city: d['地区'],
+          data1: d['确诊人数'] < 0 ? 0 : +d['确诊人数'],
+          data2: d['新增确诊'] < 0 ? 0 : +d['新增确诊'],
+          data3: d['扩散指数'] < 0 ? 0 : +d['扩散指数'],
+        });
+        return d
+      }).then(d => {
+        console.log(d);
+        console.log(data);
+
+        // 创建比例尺
+        function scaleRender(key, y) {
+          // extent取最大最小值
+          let domain = d3.extent(d, i => Math.log(i[key] + 1))
+          // y轴默认从上往下需要反向一下
+          if (y) {
+            domain.reverse()
+          }
+          return d3
+            .scaleLinear()
+            .domain(domain)
+            .range([0, size])
+        }
+        const scale1 = scaleRender('确诊人数');
+        const scale2 = scaleRender('新增确诊', true);
+        const scale3 = scaleRender('扩散指数');
+        // 创建坐标轴
+        const xAxis = d3.axisBottom(scale1).tickSize(-5);
+        const yAxis = d3.axisLeft(scale2).tickSize(-5);
+
+        // 绘制比例尺
+        san
+          .append('g')
+          .call(xAxis)
+          .attr('transform', `translate(0,${size})`);
+        san.append('g').call(yAxis);
+
+        const circle = san.append('g')
+        circle
+          .selectAll('.circle')
+          .data(data[0].info, item => item.city)
+          .enter()
+          .append('circle')
+          .attr('class', 'circle')
+          .attr('id', i => `dot-${i.city}`)
+
+        requestAnimationFrame(drawDot)
+        let i = 0
+        function drawDot() {
+          i++
+          const item = data[Math.floor(i / 30)]
+          if (!item) {
+            return
+          }
+          if (i % 30 !== 0) {
+            return requestAnimationFrame(drawDot)
+          }
+          // 绘制点
+          circle
+            .selectAll('.circle')
+            .data(item.info, function(d) {
+              return d ? d.city : this.id.split('-')[0]
+            })
+            .transition()
+            .duration(500)
+            // .attr('r', i => scale1(Math.log(i.data3 + 1)))
+            .attr('r', 10)
+            .attr('cx', i => scale1(Math.log(i.data1 + 1)))
+            .attr('cy', i => size - scale1(Math.log(i.data2 + 1)))
+            .attr('fill', 'red')
+            .attr('opacity', .2)
+          requestAnimationFrame(drawDot)
+        }
+      });
+    </script>
+  </body>
+
+</html>
