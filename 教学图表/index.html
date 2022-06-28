@@ -31,20 +31,20 @@
         // 数据引入
         let data = await d3.csv('./data.csv')
         let data_0 = await d3.csv('./data_0.csv')
-        // console.log(data);
+        console.log(data_0);
 
         // 创建比例尺
         const scaleX = d3.scaleBand()
           .domain(data.map(i => i[xName]))
           .range([0, innerWidth])
           // x不需要撑满
-          .padding(0.5)
+          // .padding(0.5)
         const scaleY = d3.scaleLinear()
           .domain([0, d3.max(data, i => i[yName])])
           .range([0, innerWidth])
           // 会发现y轴反过来了
-          .range([innerWidth, 0])
-          .nice()
+          // .range([innerWidth, 0])
+          // .nice()
 
         // 定义坐标轴
         const xAxis = d3.axisBottom(scaleX)
@@ -61,7 +61,7 @@
         bar.append('g')
           .call(xAxis)
           // x轴需要偏移
-          .attr('transform', `translate(0, ${innerHeight})`)
+          // .attr('transform', `translate(0, ${innerHeight})`)
         bar.append('g')
           .call(yAxis)
         // 不使用call的方法
@@ -70,7 +70,7 @@
         // 绘制图表
         // console.log(d3.select('g'))
 
-        const barGroup = bar.append('g')
+        // const barGroup = bar.append('g')
         // 循环实现
         // data.forEach((item) => {
         //   barGroup
@@ -97,37 +97,38 @@
         // 可以看到数据绑定的位置, __data__
         // console.log(allRect)
 
+        // 直接改写datajoin,不要复制
 
-        // datajoin方式
-        function update() {
-          barGroup
-            .selectAll('rect')
-            .data(data, (d, i) => {
-              console.log(d);
-              return d[xName]
-              return d['序号']
-            })
-            .join('rect')
-            .on('mouseenter', function() {
-              this.style.fill = 'yellow'
-            })
-            .on('mouseleave', function() {
-              this.style.fill = 'yellowgreen'
-            })
-            .transition()
-            .duration(2000)
-            .attr('width', scaleX.bandwidth)
-            .attr('height', d => innerHeight - scaleY(d[yName]))
-            .attr('x', d => scaleX(d[xName]))
-            .attr('y', d => scaleY(d[yName]))
-            .attr('fill', 'pink')
+        // // datajoin方式
+        // function update() {
+        //   barGroup
+        //     .selectAll('rect')
+        //     .data(data, (d, i) => {
+        //       console.log(d);
+        //       return d[xName]
+        //       return d['序号']
+        //     })
+        //     .join('rect')
+        //    // .on('mouseenter', function() {
+        //    //   this.style.fill = 'yellow'
+        //    // })
+        //    // .on('mouseleave', function() {
+        //    //   this.style.fill = 'yellowgreen'
+        //    // })
+        //    // .transition()
+        //    // .duration(2000)
+        //     .attr('width', scaleX.bandwidth)
+        //     .attr('height', d => innerHeight - scaleY(d[yName]))
+        //     .attr('x', d => scaleX(d[xName]))
+        //     .attr('y', d => scaleY(d[yName]))
+        //     .attr('fill', 'pink')
 
-        }
-        update()
-        setTimeout(() => {
-          data = data_0
-          update()
-        }, 3000);
+        // }
+        // update()
+        // setTimeout(() => {
+        //   data = data_0
+        //   update()
+        // }, 3000);
 
       })()
     </script>
